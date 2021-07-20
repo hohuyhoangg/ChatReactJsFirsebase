@@ -1,4 +1,4 @@
 # ChatReactJsFirsebase
 
 # Library
-
+npm install --save antd @ant-design/icons date-fns firebase lodash react-router-dom styled-components
