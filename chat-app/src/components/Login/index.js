@@ -5,13 +5,15 @@ import firebase, { auth } from '../../firebase/config';
 
 const { Title } = Typography;
 
-const fbProvider = firebase.auth.FacebookAuthProvider();
+const fbProvider = new firebase.auth.FacebookAuthProvider();
 
 
 export default function Login() {
+
     const handleFbLogin = () => {
         auth.signInWithPopup(fbProvider);
     };
+
 
     return (
         <div>
