@@ -27,7 +27,7 @@ export default function Message({ text, displayName, createAt, photoURL }) {
     return (
         <WrapperStyled>
             <div>
-                <Avatar src={photoURL}>A</Avatar>
+                <Avatar size="small" src={photoURL}>A</Avatar>
                 <Typography.Text className="author">{displayName}</Typography.Text>
                 <Typography.Text className="date">{createAt}</Typography.Text>
             </div>
