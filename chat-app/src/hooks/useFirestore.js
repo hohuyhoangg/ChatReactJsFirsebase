@@ -5,10 +5,13 @@ export const useFirestore = (collection, condition) => {
     const [documents, setDocuments] = useState([]);
 
     React.useEffect(() => {
-        let collectionRef = db.collection(collection).orderBy('createAt');
+        let collectionRef = db.collection(collection).orderBy('createdAt');
         //conđition
         if (condition) {
             if (!condition.compareValue || !condition.compareValue.length) {
+
+                // reset documents data
+                setDocuments([]);
                 return;
             }
             collectionRef = collectionRef.where(condition.fieldName, condition.operator, condition.compareValue);
@@ -19,6 +22,7 @@ export const useFirestore = (collection, condition) => {
                 ...doc.data(),
                 id: doc.id,
             }));
+
             setDocuments(documents);
         });
         return unsubscribe;
