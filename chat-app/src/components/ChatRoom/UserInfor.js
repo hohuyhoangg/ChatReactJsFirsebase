@@ -4,7 +4,6 @@ import React from 'react';
 import styled from 'styled-components';
 import { AuthContext } from '../../Context/AuthProvider';
 import { auth } from '../../firebase/config';
-import { useFirestore } from '../../hooks/useFirestore';
 
 const WrapperStyled = styled.div`
     display: flex;
@@ -19,7 +18,6 @@ const WrapperStyled = styled.div`
 `;
 
 export default function UserInfor() {
-    useFirestore('users', null);
     const { user: {
         displayName,
         photoURL

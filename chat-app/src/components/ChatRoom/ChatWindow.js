@@ -2,7 +2,13 @@
 import { UserAddOutlined } from '@ant-design/icons';
 import { Button, Tooltip, Avatar, Form, Input } from 'antd';
 import React from 'react';
+import { useContext } from 'react';
+import { useRef, useState } from 'react';
 import styled from 'styled-components';
+import { AppContext } from '../../Context/AppProvider';
+import { AuthContext } from '../../Context/AuthProvider';
+import { addDocument } from '../../firebase/service';
+import useFirestore from '../../hooks/useFirestore';
 import Message from './Message';
 
 const HeaderStyled = styled.div`    
@@ -68,51 +74,118 @@ const MessageListStyled = styled.div`
 `;
 
 export default function ChatWindow() {
+
+    const { selectedRoom, members, setIsInviteMemberVisible } =
+        useContext(AppContext);
+    const {
+        user: { uid, photoURL, displayName },
+    } = useContext(AuthContext);
+    const [inputValue, setInputValue] = useState('');
+    const [form] = Form.useForm();
+    const inputRef = useRef(null);
+    const messageListRef = useRef(null);
+
+    const handleInputChange = (e) => {
+        setInputValue(e.target.value);
+    };
+
+    const handleOnSubmit = () => {
+        addDocument('messages', {
+            text: inputValue,
+            uid,
+            photoURL,
+            roomId: selectedRoom.id,
+            displayName,
+        });
+
+        form.resetFields(['message']);
+
+        // focus to input again after submit
+        if (inputRef?.current) {
+            setTimeout(() => {
+                inputRef.current.focus();
+            });
+        }
+    };
+
+    const condition = React.useMemo(
+        () => ({
+            fieldName: 'roomId',
+            operator: '==',
+            compareValue: selectedRoom.id,
+        }),
+        [selectedRoom.id]
+    );
+
+    const messages = useFirestore('messages', condition);
+
+    // useEffect(() => {
+    //     effect
+    //     return () => {
+    //         cleanup
+    //     }
+    // }, [input])(() => {
+    //     // scroll to bottom after message changed
+    //     if (messageListRef?.current) {
+    //         messageListRef.current.scrollTop =
+    //             messageListRef.current.scrollHeight + 50;
+    //     }
+    // }, [messages]);
+
     return (
         <WrapperStyled>
             <HeaderStyled>
                 <div className="header__info">
-                    <p className="header__title">Room 1</p>
-                    <span className="header__description">Đây là room của hoàng nè</span>
+                    <p className="header__title">
+                        {selectedRoom.name}
+                    </p>
+                    <span className="header__description">
+                        {selectedRoom.description}
+                    </span>
                 </div>
                 <ButtonGroupStyled>
-                    <Button icon={<UserAddOutlined />} type='text'>
+                    <Button icon={<UserAddOutlined />} type='text' onClick={() => setIsInviteMemberVisible(true)}>
                         Mời
                     </Button>
-                    <Avatar.Group size="small" maxCount={2}>
-                        <Tooltip title="A">
-                            <Avatar>A</Avatar>
-                        </Tooltip>
-                        <Tooltip title="A">
-                            <Avatar>B</Avatar>
-                        </Tooltip>
-                        <Tooltip title="A">
-                            <Avatar>C</Avatar>
-                        </Tooltip>
-                        <Tooltip title="A">
-                            <Avatar>D</Avatar>
-                        </Tooltip>
+                    <Avatar.Group size='small' maxCount={2}>
+                        {members.map((member) => (
+                            <Tooltip title={member.displayName} key={member.id}>
+                                <Avatar src={member.photoURL}>
+                                    {member.photoURL
+                                        ? ''
+                                        : member.displayName?.charAt(0)?.toUpperCase()}
+                                </Avatar>
+                            </Tooltip>
+                        ))}
                     </Avatar.Group>
                 </ButtonGroupStyled>
             </HeaderStyled>
 
             <ContentStyled>
-                <MessageListStyled>
-                    <Message text="Hoàng" photoURL={null} displayName="Hoàng nè" createAt={5551515}></Message>
-                    <Message text="Hoàng" photoURL={null} displayName="Hoàng nè" createAt={5551515}></Message>
-                    <Message text="Hoàng" photoURL={null} displayName="Hoàng nè" createAt={5551515}></Message>
-                    <Message text="Hoàng" photoURL={null} displayName="Hoàng nè" createAt={5551515}></Message>
-                    <Message text="Hoàng" photoURL={null} displayName="Hoàng nè" createAt={5551515}></Message>
-                    <Message text="Hoàng" photoURL={null} displayName="Hoàng nè" createAt={5551515}></Message>
+                <MessageListStyled ref={messageListRef}>
+                    {messages.map((mes) => (
+                        <Message
+                            key={mes.id}
+                            text={mes.text}
+                            photoURL={mes.photoURL}
+                            displayName={mes.displayName}
+                            createdAt={mes.createdAt}
+                        />
+                    ))}
                 </MessageListStyled>
-                <FormStyled>
-                    <Form.Item>
+                <FormStyled form={form}>
+                    <Form.Item name='message'>
                         <Input
-                            placeholder="Nhập tin nhắn..."
+                            onChange={handleInputChange}
+                            onPressEnter={handleOnSubmit}
+                            placeholder='Nhập tin nhắn...'
                             bordered={false}
-                            autoComplete="off" />
+                            autoComplete='off'
+                        />
                     </Form.Item>
-                    <Button type="primary">Gửi</Button>
+                    <Button type='primary' onClick={handleOnSubmit}>
+                        Gửi
+                    </Button>
                 </FormStyled>
             </ContentStyled>
         </WrapperStyled >
